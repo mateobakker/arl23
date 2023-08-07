@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Map of Arlington, VA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.maptiler.com/maplibre-gl-js/v1.14.0/maplibre-gl.js"></script>
+    <link href="https://cdn.maptiler.com/maplibre-gl-js/v1.14.0/maplibre-gl.css" rel="stylesheet" >
+    <style>
+        #map {position: absolute; top: 0; bottom: 0; left: 0; right: 0;}
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script>
+        const map = new maplibregl.Map({
+            container: 'map',
+            style: 'https://api.maptiler.com/maps/basic-v2-light/style.json?key=uddo0LeCj9466p3FGCMJ',
+            center: [-122.590261,37.963689],
+            zoom: 11
+        });
+        map.on('load', () => {
+            const pal = ['#a6cee3','#1f78b4','#b2df8a','#33a02c','#fb9a99','#e31a1c','#fdbf6f','#ff7f00','#cab2d6','#6a3d9a','#ffff99','#b15928'];
+            const layers = map.getStyle().layers;
+        // Find the index of the first symbol layer in the map style
+        let firstSymbolId;
+        for (let i = 0; i < layers.length; i++) {
+            if (layers[i].type === 'symbol') {
+                firstSymbolId = layers[i].id;
+                break;
+            }
+        }// Add a source for the restrictive covenants from Marin County's Open Data.
+            map.addSource('marin', {
+                'type': 'geojson',
+                'data': "https://raw.githubusercontent.com/mateobakker/arl23/main/marin_covenants.geojson"
+            });
+    
+            // Add a layer showing the marin polygons.
+            map.addLayer({
+                'id': 'marin-layer',
+                'type': 'fill',
+                'source': 'marin',
+                paint: {
+            "fill-color": [
+              "match",
+              ["get", "Jurisdiction"],
+              "Belvedere",
+              "#9E559C",
+              "Corte Madera",
+              "#A7C636",
+              "Fairfax",
+              "#149ECE",
+              "Larkspur",
+              "#ED5151",
+              "Mill Valley",
+              "#fb9a99",
+              "Novato",
+              "#e31a1c",
+              "Ross",
+              "#fdbf6f",
+              "San Anselmo",
+              "#ff7f00",
+              "San Rafael",
+              "#cab2d6",
+              "Sausalito",
+              "#6a3d9a",
+              "Tiburon",
+              "#ffff99",
+              "black"
+            ],
+            "fill-opacity": 0.65
+          }
+            },
+            // This is the important part of this example: the addLayer
+                // method takes 2 arguments: the layer as an object, and a string
+                // representing another layer's name. if the other layer
+                // exists in the stylesheet already, the new layer will be positioned
+                // right before that layer in the stack, making it possible to put
+                // 'overlays' anywhere in the layer stack.
+                // Insert the layer beneath the first symbol layer.
+            firstSymbolId
+            ); 
+        });
+        // When a click event occurs on a feature in our marin layer, open a popup at the
+            // location of the click, with description HTML from its properties.
+            map.on('click', 'marin-layer', (e) => {
+                new maplibregl.Popup()
+                    .setLngLat(e.lngLat)
+                    // I customized this .setHTML content with two features. Could easily be expanded
+                    .setHTML('<b>Subdivision: </b>' + e.features[0].properties.Subdivision + '<br></br>' +  '<b>Jurisdiction: </b>' + e.features[0].properties.Jurisdiction + '<br></br>' + '<b>Restrictive Language: </b>' + e.features[0].properties.Restrictive_Language)
+                    .addTo(map);
+            });
+    
+            // Change the cursor to a pointer when the mouse is over the marin layer.
+            map.on('mouseenter', 'marin-layer', () => {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+    
+            // Change it back to a pointer when it leaves.
+            map.on('mouseleave', 'marin-layer', () => {
+                map.getCanvas().style.cursor = '';
+            });
+    </script>
+    </body>
+</html>
