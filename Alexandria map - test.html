@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Map of Arlington, VA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.maptiler.com/maplibre-gl-js/v1.14.0/maplibre-gl.js"></script>
+    <link href="https://cdn.maptiler.com/maplibre-gl-js/v1.14.0/maplibre-gl.css" rel="stylesheet" >
+    <style>
+        body {
+          padding: 0;
+          margin: 0;
+        }
+        html, body, #map {
+          font-family: sans-serif;
+          height: 100%;
+          width: 100%;
+        }
+        #meta {
+          background-color: rgba(255,255,255,0.75);
+          color: black;
+          z-index: 2;
+          position: absolute;
+          top: 10px;
+          left: 20px;
+          padding: 10px 20px;
+          margin: 0;
+        }
+  
+        #legend {
+        background-color: rgba(255, 255, 255, 0.5);
+        border-radius: 3px;
+        bottom: 30px;
+        width: 188px;
+        box-shadow: 0px 0px 0px 1px rgba(0, 0, 0, 0.3);
+        padding: 10px;
+        position: absolute;
+        right: 10px;
+        z-index: 1;
+        line-height: 18px;
+        color: black;
+      }
+  
+      .legend-title {
+        font: 16px 'Rubik', sans-serif;
+        font-weight: bold;
+        margin-bottom: 5px;
+      }
+  
+      .legend-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 5px;
+      }
+  
+      .legend-box-1 {
+        width: 15px;
+        height: 15px;
+        margin-right: 5px;
+        border: 2px solid black;
+      }
+  
+      .legend-box-2 {
+        width: 17px;
+        height: 17px;
+        margin-right: 5px;
+        border: 1px solid rgba(56,108,176, 1);
+        background-color: rgba(56,108,176, .1);
+      }
+  
+      .legend-label {
+        font: 12px 'Rubik', sans-serif;
+      }
+      </style>
+</head>
+<body>
+
+    <div id="meta">
+        <h2>Racially Restrictive Covenants in Alexandria, Virginia</h2>
+      </div>
+
+      <div id="legend">
+        <div class="legend-title">Map Legend</div>
+        <div class="legend-item">
+          <div class="legend-box-1"></div>
+          <div class="legend-label">City of Alexandria</div>
+        </div>
+        <div class="legend-item">
+          <div class="legend-box-2"></div>
+          <div class="legend-label">Racially Restrictive Covenants</div>
+        </div>
+      </div>
+
+    <div id="map"></div>
+    <script>
+        const map = new maplibregl.Map({
+            container: 'map',
+            style: 'https://api.maptiler.com/maps/basic-v2-light/style.json?key=uddo0LeCj9466p3FGCMJ',
+            center: [-77.08219909667969,38.82039260864258],
+            zoom: 12
+        });
+        map.on('load', () => {
+        const layers = map.getStyle().layers;
+        // Find the index of the first symbol layer in the map style
+        let firstSymbolId;
+        for (let i = 0; i < layers.length; i++) {
+            if (layers[i].type === 'symbol') {
+                firstSymbolId = layers[i].id;
+                break;
+            }
+        }// Add boundary source from Alexandria's open data site.
+        map.addSource('boundary', {
+          type: 'geojson',
+          data: 'https://services2.arcgis.com/ChYV69FhfjwkvRmy/arcgis/rest/services/Boundary/FeatureServer/0/query?outFields=*&where=1%3D1&f=geojson'
+        });
+        // add the GeoJSON data as a mapbox gl layer
+    
+    map.addLayer({
+          'id': 'boundary-layer',
+          'type': 'line',
+          'source': 'boundary', // refers to source above
+          "paint": {
+            "line-color":"black"
+          }
+        });
+        map.addSource('alexandria_covenants', {
+                'type': 'geojson',
+                'data': "./data/km_alexandria.geojson"
+            });
+    
+            // Add a layer showing the parcel polygons.
+            map.addLayer({
+                'id': 'alexandria_covenants-layer',
+                'type': 'fill',
+                'source': 'alexandria_covenants',
+                'paint': {
+                    'fill-color': 'rgba(200, 100, 240, 0.4)',
+                    'fill-outline-color': 'rgba(200, 100, 240, 1)'
+                }
+            },
+            // This is the important part of this example: the addLayer
+                // method takes 2 arguments: the layer as an object, and a string
+                // representing another layer's name. if the other layer
+                // exists in the stylesheet already, the new layer will be positioned
+                // right before that layer in the stack, making it possible to put
+                // 'overlays' anywhere in the layer stack.
+                // Insert the layer beneath the first symbol layer.
+            firstSymbolId
+            ); 
+        });
+        // When a click event occurs on a feature in our covenants layer, open a popup at the
+            // location of the click, with description HTML from its properties.
+            map.on('click', 'alexandria_covenants-layer', (e) => {
+                new maplibregl.Popup()
+                    .setLngLat(e.lngLat)
+                    // I customized this .setHTML content with two features. Could easily be expanded
+                    .setHTML(e.features[0].properties.original_address + '<br></br>' + '<b>Year Covenant Recorded: </b>' + e.features[0].properties.covenant_year +  '<br></br>' + '<b>Restrictive language: </b>' + e.features[0].properties.covenant_language)
+                    .addTo(map);
+            });
+    
+            // Change the cursor to a pointer when the mouse is over the mhudb layer.
+            map.on('mouseenter', 'alexandria_covenants-layer', () => {
+                map.getCanvas().style.cursor = 'pointer';
+            });
+    
+            // Change it back to a pointer when it leaves.
+            map.on('mouseleave', 'alexandria_covenants-layer', () => {
+                map.getCanvas().style.cursor = '';
+            });
+    </script>
+    </body>
+</html>
