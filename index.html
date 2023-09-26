@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Map of Arlington, VA</title>
+    <title>Restrictive Covenants in Alexandria</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.maptiler.com/maplibre-gl-js/v1.14.0/maplibre-gl.js"></script>
     <link href="https://cdn.maptiler.com/maplibre-gl-js/v1.14.0/maplibre-gl.css" rel="stylesheet" >
@@ -63,8 +63,8 @@
         width: 17px;
         height: 17px;
         margin-right: 5px;
-        border: 1px solid rgba(56,108,176, 1);
-        background-color: rgba(56,108,176, .1);
+        border: 1px solid rgba(200, 100, 240, 1);
+        background-color: rgba(200, 100, 240, 0.4);
       }
   
       .legend-label {
@@ -95,7 +95,7 @@
         const map = new maplibregl.Map({
             container: 'map',
             style: 'https://api.maptiler.com/maps/basic-v2-light/style.json?key=uddo0LeCj9466p3FGCMJ',
-            center: [-77.08219909667969,38.82039260864258],
+            center: [-77.05055,38.82045],
             zoom: 12
         });
         map.on('load', () => {
